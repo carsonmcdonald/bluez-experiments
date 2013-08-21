@@ -1,5 +1,5 @@
 all:
-	cc -o st scantest.c -lbluetooth -lcurses
+	cc -g -o st scantest.c -lbluetooth -lcurses
 
 clean:
 	rm -f st
