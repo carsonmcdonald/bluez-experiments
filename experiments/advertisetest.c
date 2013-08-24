@@ -15,8 +15,14 @@
 #define EIR_NAME_COMPLETE           0x09
 #define EIR_MANUFACTURE_SPECIFIC    0xFF
 
-void main()
+void main(int argc, char **argv)
 {
+  if(argc != 2)
+  {
+    fprintf(stderr, "Usage: %s UUID\n", argv[0]);
+    exit(1);
+  }
+
   int device_id = hci_get_route(NULL);
 
   int device_handle = 0;
