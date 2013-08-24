@@ -1,7 +1,5 @@
-gatt-relay
-==========
-
-Relay GATT commands using Bluez
+bluez-experiments
+=================
 
 **Work in progress**
 
