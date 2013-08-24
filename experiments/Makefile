@@ -3,4 +3,4 @@ all:
 	cc -g -o at advertisetest.c -lbluetooth -lcurses
 
 clean:
-	rm -f st
+	rm -f st at
