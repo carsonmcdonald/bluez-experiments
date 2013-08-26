@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <curses.h>
 #include <unistd.h>
+#include <ctype.h>
 #include <sys/ioctl.h>
 
 #include <bluetooth/bluetooth.h>
@@ -14,6 +15,23 @@
 #define EIR_NAME_SHORT              0x08
 #define EIR_NAME_COMPLETE           0x09
 #define EIR_MANUFACTURE_SPECIFIC    0xFF
+
+unsigned int *uuid_str_to_data(char *uuid)
+{
+  char conv[] = "0123456789ABCDEF";
+  int len = strlen(uuid);
+  unsigned int *data = (unsigned int*)malloc(sizeof(unsigned int) * len);
+  unsigned int *dp = data;
+  char *cu = uuid;
+
+  for(; cu<uuid+len; dp++,cu+=2)
+  {
+    *dp = ((strchr(conv, toupper(*cu)) - conv) * 16) 
+        + (strchr(conv, toupper(*(cu+1))) - conv);
+  }
+
+  return data;
+}
 
 void main(int argc, char **argv)
 {
@@ -34,8 +52,8 @@ void main(int argc, char **argv)
 
   le_set_advertising_parameters_cp adv_params_cp;
   memset(&adv_params_cp, 0, sizeof(adv_params_cp));
-  adv_params_cp.min_interval = htobs(0x0800);
-  adv_params_cp.max_interval = htobs(0x0800);
+  adv_params_cp.min_interval = htobs(0x0100);
+  adv_params_cp.max_interval = htobs(0x0100);
   //if (opt)
   //  adv_params_cp.advtype = atoi(opt);
   adv_params_cp.chan_map = 7;
@@ -57,39 +75,36 @@ void main(int argc, char **argv)
   le_set_advertising_data_cp adv_data_cp;
   memset(&adv_data_cp, 0, sizeof(adv_data_cp));
 
-  adv_data_cp.length = htobs(30);
+  uint8_t segment_length = 1;
+  adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(EIR_FLAGS); segment_length++;
+  adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(0x1A); segment_length++;
+  adv_data_cp.data[adv_data_cp.length] = htobs(segment_length - 1);
 
-  adv_data_cp.data[0] = htobs(2);
-  adv_data_cp.data[1] = htobs(EIR_FLAGS);
-  adv_data_cp.data[2] = htobs(0x1A);
+  adv_data_cp.length += segment_length;
 
-  adv_data_cp.data[3]  = htobs(26);
-  adv_data_cp.data[4]  = htobs(EIR_MANUFACTURE_SPECIFIC);
-  adv_data_cp.data[5]  = htobs(0x4C);
-  adv_data_cp.data[6]  = htobs(0x00);
-  adv_data_cp.data[7]  = htobs(0x02);
-  adv_data_cp.data[8]  = htobs(0x15);
-  adv_data_cp.data[9]  = htobs(0xE2);
-  adv_data_cp.data[10] = htobs(0xC5);
-  adv_data_cp.data[11] = htobs(0x6D);
-  adv_data_cp.data[12] = htobs(0xB5);
-  adv_data_cp.data[13] = htobs(0xDF);
-  adv_data_cp.data[14] = htobs(0xFB);
-  adv_data_cp.data[15] = htobs(0x48);
-  adv_data_cp.data[16] = htobs(0xD2);
-  adv_data_cp.data[17] = htobs(0xB0);
-  adv_data_cp.data[18] = htobs(0x60);
-  adv_data_cp.data[19] = htobs(0xD0);
-  adv_data_cp.data[20] = htobs(0xF5);
-  adv_data_cp.data[21] = htobs(0xA7);
-  adv_data_cp.data[22] = htobs(0x10);
-  adv_data_cp.data[23] = htobs(0x96);
-  adv_data_cp.data[24] = htobs(0xE0);
-  adv_data_cp.data[25] = htobs(0x00);
-  adv_data_cp.data[26] = htobs(0x00);
-  adv_data_cp.data[27] = htobs(0x00);
-  adv_data_cp.data[28] = htobs(0x00);
-  adv_data_cp.data[29] = htobs(0xFF);
+  segment_length = 1;
+  adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(EIR_MANUFACTURE_SPECIFIC); segment_length++;
+  adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(0x4C); segment_length++;
+  adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(0x00); segment_length++;
+  adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(0x02); segment_length++;
+  adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(0x15); segment_length++;
+
+  unsigned int *uuid = uuid_str_to_data(argv[1]);
+  int i;
+  for(i=0; i<strlen(argv[1])/2; i++)
+  {
+    adv_data_cp.data[adv_data_cp.length + segment_length]  = htobs(uuid[i]); segment_length++;
+  }
+
+  adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(0x00); segment_length++;
+  adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(0x00); segment_length++;
+  adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(0x00); segment_length++;
+  adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(0x00); segment_length++;
+  adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(0xC5); segment_length++;
+
+  adv_data_cp.data[adv_data_cp.length] = htobs(segment_length - 1);
+
+  adv_data_cp.length += segment_length;
 
   memset(&rq, 0, sizeof(rq));
   rq.ogf = OGF_LE_CTL;
