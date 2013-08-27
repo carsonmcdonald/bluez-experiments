@@ -33,11 +33,16 @@ unsigned int *uuid_str_to_data(char *uuid)
   return data;
 }
 
+unsigned int twoc(int in, int t)
+{
+  return (in < 0) ? (in + (2 << (t-1))) : in;
+}
+
 void main(int argc, char **argv)
 {
-  if(argc != 2)
+  if(argc != 3)
   {
-    fprintf(stderr, "Usage: %s UUID\n", argv[0]);
+    fprintf(stderr, "Usage: %s <UUID> <RSSI calibration amount>\n", argv[0]);
     exit(1);
   }
 
@@ -100,7 +105,9 @@ void main(int argc, char **argv)
   adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(0x00); segment_length++;
   adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(0x00); segment_length++;
   adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(0x00); segment_length++;
-  adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(0xC5); segment_length++;
+
+  // RSSI calibration
+  adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(twoc(atoi(argv[2]), 8)); segment_length++;
 
   adv_data_cp.data[adv_data_cp.length] = htobs(segment_length - 1);
 
