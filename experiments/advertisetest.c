@@ -40,9 +40,9 @@ unsigned int twoc(int in, int t)
 
 void main(int argc, char **argv)
 {
-  if(argc != 3)
+  if(argc != 5)
   {
-    fprintf(stderr, "Usage: %s <UUID> <RSSI calibration amount>\n", argv[0]);
+    fprintf(stderr, "Usage: %s <UUID> <major number> <minor number> <RSSI calibration amount>\n", argv[0]);
     exit(1);
   }
 
@@ -101,13 +101,17 @@ void main(int argc, char **argv)
     adv_data_cp.data[adv_data_cp.length + segment_length]  = htobs(uuid[i]); segment_length++;
   }
 
-  adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(0x00); segment_length++;
-  adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(0x00); segment_length++;
-  adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(0x00); segment_length++;
-  adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(0x00); segment_length++;
+  // Major number
+  int major_number = atoi(argv[2]);
+  adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(major_number >> 8 & 0x00FF); segment_length++;
+  adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(major_number & 0x00FF); segment_length++;
 
-  // RSSI calibration
-  adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(twoc(atoi(argv[2]), 8)); segment_length++;
+  // Minor number
+  int minor_number = atoi(argv[3]);
+  adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(minor_number >> 8 & 0x00FF); segment_length++;
+  adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(minor_number & 0x00FF); segment_length++;
+
+  adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(twoc(atoi(argv[4]), 8)); segment_length++;
 
   adv_data_cp.data[adv_data_cp.length] = htobs(segment_length - 1);
 
