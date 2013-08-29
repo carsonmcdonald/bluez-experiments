@@ -40,9 +40,9 @@ unsigned int twoc(int in, int t)
 
 void main(int argc, char **argv)
 {
-  if(argc != 5)
+  if(argc != 6)
   {
-    fprintf(stderr, "Usage: %s <UUID> <major number> <minor number> <RSSI calibration amount>\n", argv[0]);
+    fprintf(stderr, "Usage: %s <advertisement time in ms> <UUID> <major number> <minor number> <RSSI calibration amount>\n", argv[0]);
     exit(1);
   }
 
@@ -57,8 +57,8 @@ void main(int argc, char **argv)
 
   le_set_advertising_parameters_cp adv_params_cp;
   memset(&adv_params_cp, 0, sizeof(adv_params_cp));
-  adv_params_cp.min_interval = htobs(0x0100);
-  adv_params_cp.max_interval = htobs(0x0100);
+  adv_params_cp.min_interval = htobs(atoi(argv[1]));
+  adv_params_cp.max_interval = htobs(atoi(argv[1]));
   //if (opt)
   //  adv_params_cp.advtype = atoi(opt);
   adv_params_cp.chan_map = 7;
@@ -94,24 +94,25 @@ void main(int argc, char **argv)
   adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(0x02); segment_length++;
   adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(0x15); segment_length++;
 
-  unsigned int *uuid = uuid_str_to_data(argv[1]);
+  unsigned int *uuid = uuid_str_to_data(argv[2]);
   int i;
-  for(i=0; i<strlen(argv[1])/2; i++)
+  for(i=0; i<strlen(argv[2])/2; i++)
   {
     adv_data_cp.data[adv_data_cp.length + segment_length]  = htobs(uuid[i]); segment_length++;
   }
 
   // Major number
-  int major_number = atoi(argv[2]);
+  int major_number = atoi(argv[3]);
   adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(major_number >> 8 & 0x00FF); segment_length++;
   adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(major_number & 0x00FF); segment_length++;
 
   // Minor number
-  int minor_number = atoi(argv[3]);
+  int minor_number = atoi(argv[4]);
   adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(minor_number >> 8 & 0x00FF); segment_length++;
   adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(minor_number & 0x00FF); segment_length++;
 
-  adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(twoc(atoi(argv[4]), 8)); segment_length++;
+  // RSSI calibration
+  adv_data_cp.data[adv_data_cp.length + segment_length] = htobs(twoc(atoi(argv[5]), 8)); segment_length++;
 
   adv_data_cp.data[adv_data_cp.length] = htobs(segment_length - 1);
 
