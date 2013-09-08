@@ -8,6 +8,7 @@ bluez-experiments
 
 
 - scantest.c - An example of scanning for BTLE devices
+- advertisetest.c - An example of advertising
 
 
 
