@@ -133,7 +133,7 @@ void error_check_and_exit(struct hci_state current_hci_state)
   }
 }
 
-void process_data(uint8_t *data, size_t data_len)
+void process_data(uint8_t *data, size_t data_len, le_advertising_info *info)
 {
   printw("Test: %p and %d\n", data, data_len);
   if(data[0] == EIR_NAME_SHORT || data[0] == EIR_NAME_COMPLETE)
@@ -144,10 +144,9 @@ void process_data(uint8_t *data, size_t data_len)
     memcpy(name, &data[2], name_len);
 
     char addr[18];
-    // TODO ba2str(&info->bdaddr, addr);
+    ba2str(&info->bdaddr, addr);
 
-    // TODO printw("addr=%s name=%s\n", addr, name);
-    printw("name=%s\n", name);
+    printw("addr=%s name=%s\n", addr, name);
 
     free(name);
   }
@@ -233,13 +232,6 @@ void main(void)
         continue;
       }
 
-/*
- *   uint8_t   evt_type;
- *   uint8_t   bdaddr_type;
- *   bdaddr_t  bdaddr;
- *   uint8_t   length;
- *   uint8_t   data[0];
- * */
       le_advertising_info *info = (le_advertising_info *) (meta->data + 1);
 
       printw("Event: %d\n", info->evt_type);
@@ -264,7 +256,7 @@ void main(void)
         }
         else
         {
-          process_data(info->data + current_index + 1, data_len);
+          process_data(info->data + current_index + 1, data_len, info);
           current_index += data_len + 1;
         }
       }
