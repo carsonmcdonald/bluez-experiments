@@ -133,6 +133,50 @@ void error_check_and_exit(struct hci_state current_hci_state)
   }
 }
 
+void process_data(uint8_t *data, size_t data_len, le_advertising_info *info)
+{
+  printw("Test: %p and %d\n", data, data_len);
+  if(data[0] == EIR_NAME_SHORT || data[0] == EIR_NAME_COMPLETE)
+  {
+    size_t name_len = data_len - 1;
+    char *name = malloc(name_len + 1);
+    memset(name, 0, name_len + 1);
+    memcpy(name, &data[2], name_len);
+
+    char addr[18];
+    ba2str(&info->bdaddr, addr);
+
+    printw("addr=%s name=%s\n", addr, name);
+
+    free(name);
+  }
+  else if(data[0] == EIR_FLAGS)
+  {
+    printw("Flag type: len=%d\n", data_len);
+    int i;
+    for(i=1; i<data_len; i++)
+    {
+      printw("\tFlag data: 0x%0X\n", data[i]);
+    }
+  }
+  else if(data[0] == EIR_MANUFACTURE_SPECIFIC)
+  {
+    printw("Manufacture specific type: len=%d\n", data_len);
+
+    // TODO int company_id = data[current_index + 2] 
+
+    int i;
+    for(i=1; i<data_len; i++)
+    {
+      printw("\tData: 0x%0X\n", data[i]);
+    }
+  }
+  else
+  {
+    printw("Unknown type: type=%X\n", data[0]);
+  }
+}
+
 void main(void)
 {
   initscr();
@@ -188,13 +232,6 @@ void main(void)
         continue;
       }
 
-/*
- *   uint8_t   evt_type;
- *     uint8_t   bdaddr_type;
- *       bdaddr_t  bdaddr;
- *         uint8_t   length;
- *           uint8_t   data[0];
- * */
       le_advertising_info *info = (le_advertising_info *) (meta->data + 1);
 
       printw("Event: %d\n", info->evt_type);
@@ -205,58 +242,23 @@ void main(void)
         continue;
       }
 
-      size_t data_len;
       int current_index = 0;
+      int data_error = 0;
 
-// TODO this is just temporary
-keepgoing:
-      data_len = info->data[current_index];
-
-      if(data_len + 1 > info->length)
+      while(!data_error && current_index < info->length)
       {
-        printw("EIR data length is longer than EIR packet length. %d + 1 > %d", data_len, info->length);
-        continue;
-      }
+        size_t data_len = info->data[current_index];
 
-      if(info->data[current_index + 1] == EIR_NAME_SHORT || info->data[current_index + 1] == EIR_NAME_COMPLETE)
-      {
-        size_t name_len = data_len - 1;
-        char *name = malloc(name_len + 1);
-        memset(name, 0, name_len + 1);
-        memcpy(name, &info->data[current_index + 2], name_len);
-
-        char addr[18];
-        ba2str(&info->bdaddr, addr);
-
-        printw("addr=%s name=%s\n", addr, name);
-
-        free(name);
-      }
-      else if(info->data[current_index + 1] == EIR_FLAGS)
-      {
-        printw("Flag type: len=%d\n", data_len);
-        int i;
-        for(i=1; i<data_len; i++)
+        if(data_len + 1 > info->length)
         {
-          printw("\tFlag data: 0x%0X\n", info->data[current_index + 1 + i]);
+          printw("EIR data length is longer than EIR packet length. %d + 1 > %d", data_len, info->length);
+          data_error = 1;
         }
-        current_index = current_index + 1 + i;
-        goto keepgoing; // TODO hack for now
-      }
-      else if(info->data[current_index + 1] == EIR_MANUFACTURE_SPECIFIC)
-      {
-        printw("Manufacture specific type: len=%d\n", data_len);
-        // TODO int company_id = info->data[current_index + 2] 
-        int i;
-        for(i=1; i<data_len; i++)
+        else
         {
-          printw("\tData: 0x%0X\n", info->data[current_index + 1 + i]);
+          process_data(info->data + current_index + 1, data_len, info);
+          current_index += data_len + 1;
         }
-        current_index = current_index + 1 + i;
-      }
-      else
-      {
-        printw("Unknown type: type=%X\n", info->data[current_index + 1]);
       }
     }
   }
