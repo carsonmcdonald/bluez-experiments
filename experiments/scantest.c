@@ -177,6 +177,11 @@ void process_data(uint8_t *data, size_t data_len, le_advertising_info *info)
   }
 }
 
+void get_rssi()
+{
+  // todo struct hci_conn_info *cr = malloc(sizeof(*cr) + sizeof(struct hci_conn_info));
+}
+
 void main(void)
 {
   initscr();
@@ -257,6 +262,7 @@ void main(void)
         else
         {
           process_data(info->data + current_index + 1, data_len, info);
+          get_rssi();
           current_index += data_len + 1;
         }
       }
