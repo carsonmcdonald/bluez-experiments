@@ -59,8 +59,6 @@ void main(int argc, char **argv)
   memset(&adv_params_cp, 0, sizeof(adv_params_cp));
   adv_params_cp.min_interval = htobs(atoi(argv[1]));
   adv_params_cp.max_interval = htobs(atoi(argv[1]));
-  //if (opt)
-  //  adv_params_cp.advtype = atoi(opt);
   adv_params_cp.chan_map = 7;
 
   uint8_t status;
@@ -75,7 +73,11 @@ void main(int argc, char **argv)
 
   int ret = hci_send_req(device_handle, &rq, 1000);
   if (ret < 0)
-    goto done;
+  {
+    hci_close_dev(device_handle);
+    fprintf(stderr, "Can't send request %s (%d)\n", strerror(errno), errno);
+    exit(1);
+  }
 
   le_set_advertising_data_cp adv_data_cp;
   memset(&adv_data_cp, 0, sizeof(adv_data_cp));
@@ -128,7 +130,11 @@ void main(int argc, char **argv)
 
   ret = hci_send_req(device_handle, &rq, 1000);
   if (ret < 0)
-    goto done;
+  {
+    hci_close_dev(device_handle);
+    fprintf(stderr, "Can't send request %s (%d)\n", strerror(errno), errno);
+    exit(1);
+  }
 
   le_set_advertise_enable_cp advertise_cp;
   memset(&advertise_cp, 0, sizeof(advertise_cp));
@@ -143,16 +149,17 @@ void main(int argc, char **argv)
   rq.rlen = 1;
 
   ret = hci_send_req(device_handle, &rq, 1000);
-
-done:
-  hci_close_dev(device_handle);
-
-  if (ret < 0) {
-    fprintf(stderr, "Can't set advertise mode on hci%d: %s (%d)\n", device_id, strerror(errno), errno);
+  if(ret < 0)
+  {
+    hci_close_dev(device_handle);
+    fprintf(stderr, "Can't send request %s (%d)\n", strerror(errno), errno);
     exit(1);
   }
 
-  if (status) {
+  hci_close_dev(device_handle);
+
+  if (status) 
+  {
     fprintf(stderr, "LE set advertise enable on hci%d returned status %d\n", device_id, status);
     exit(1);
   }
