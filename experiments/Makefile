@@ -4,4 +4,4 @@ all:
 	cc -g -o ibeacon ibeacon.c -lbluetooth
 
 clean:
-	rm -f st at
+	rm -f st at ibeacon
