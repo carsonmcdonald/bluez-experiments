@@ -141,7 +141,7 @@ void process_data(uint8_t *data, size_t data_len, le_advertising_info *info)
     size_t name_len = data_len - 1;
     char *name = malloc(name_len + 1);
     memset(name, 0, name_len + 1);
-    memcpy(name, &data[2], name_len);
+    memcpy(name, &data[1], name_len);
 
     char addr[18];
     ba2str(&info->bdaddr, addr);
