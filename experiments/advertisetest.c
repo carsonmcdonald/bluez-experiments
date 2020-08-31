@@ -24,6 +24,7 @@ unsigned int *uuid_str_to_data(char *uuid)
   for(int i = 0; i<(strlen(uuid)/2); i++)
   {
     uuid[c]=toupper(uuid[c]);
+    uuid[c+1]=toupper(uuid[c+1]);
     data[i]=(uuid[c]>='A' && uuid[c]<='F')?(uuid[c]-'A'+10)*16:(uuid[c]-'0')*16;
     data[i]+=(uuid[c+1]>='A' && uuid[c+1]<='F')?(uuid[c+1]-'A'+10):uuid[c+1]-'0';
     c+=2;
