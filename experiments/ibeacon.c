@@ -21,16 +21,15 @@ int global_done = 0;
 
 unsigned int *uuid_str_to_data(char *uuid)
 {
-  char conv[] = "0123456789ABCDEF";
-  int len = strlen(uuid);
-  unsigned int *data = (unsigned int*)malloc(sizeof(unsigned int) * len);
-  unsigned int *dp = data;
-  char *cu = uuid;
+  unsigned int *data = (unsigned int*)malloc(sizeof(unsigned int) * (strlen(uuid)/2));
+  int c = 0;
 
-  for(; cu<uuid+len; dp++,cu+=2)
+  for(int i = 0; i<(strlen(uuid)/2); i++)
   {
-    *dp = ((strchr(conv, toupper(*cu)) - conv) * 16) 
-        + (strchr(conv, toupper(*(cu+1))) - conv);
+    uuid[c]=toupper(uuid[c]);
+    data[i]=(uuid[c]>='A' && uuid[c]<='F')?(uuid[c]-'A'+10)*16:(uuid[c]-'0')*16;
+    data[i]+=(uuid[c+1]>='A' && uuid[c+1]<='F')?(uuid[c+1]-'A'+10):uuid[c+1]-'0';
+    c+=2;
   }
 
   return data;
